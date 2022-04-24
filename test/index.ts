@@ -40,15 +40,30 @@ describe("MyToken contract", function () {
     expect(await token.balanceOf(owner.address)).to.be.equal(0)
   })
 
+  it("Should not transfer", async function () {
+    await expect(token.transfer(user1.address, 10)).to.be.revertedWith("Your balance is not enough")
+  })
+
   it("Should transfer from owner to user1", async function () {
-    await token.transfer(user1.address, 10);
-    expect(await token.balanceOf(user1.address)).to.be.equal(10)
+    await token.mint(owner.address, 10);
+    await token.transfer(user1.address, 10)
+    expect (await token.balanceOf(user1.address)).to.be.equal(10)
+  })
+
+  it("Should not transfer from", async function () {
+    await token.approve(user1.address, 10);
+    await expect(token.transferFrom(owner.address, user2.address, 10)).to.be.revertedWith("Your balance is not enough")
+  })
+
+  it("Should not transfer from", async function () {
+    await token.mint(owner.address, 10);
+    await expect(token.transferFrom(owner.address, user2.address, 10)).to.be.revertedWith("Not approved")
   })
 
   it("Should transfer from owner to user2 by user1", async function () {
     await token.approve(user1.address, 10);
-    await token.transferFrom(owner.address, user2.address, 10);
     await token.mint(owner.address, 10);
+    await token.connect(user1).transferFrom(owner.address, user2.address, 10);
     expect(await token.balanceOf(user2.address)).to.be.equal(10)
     expect(await token.balanceOf(owner.address)).to.be.equal(0)
   })
@@ -61,7 +76,7 @@ describe("MyToken contract", function () {
   it("Should burn total supply", async function () {
     var tmpSupply = (await token.totalSupply())
     await token.mint(user1.address, 10);
-    await token.burn(owner.address, 5)
+    await token.burn(user1.address, 5)
     expect(await token.totalSupply()).to.be.equal(tmpSupply + 10 - 5);
   })
 

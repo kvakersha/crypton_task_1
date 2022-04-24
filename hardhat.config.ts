@@ -8,42 +8,10 @@ import "hardhat-gas-reporter";
 import "solidity-coverage";
 import { Contract, ContractFactory } from "ethers";
 
+import "./tasks/tasks.ts";
+
 
 dotenv.config();
-
-task("approve", "approve amount")
-  .addParam("contract")
-  .addParam("to")
-  .addParam("value")
-  .setAction(async (args, hre) => {
-    const Token = await hre.ethers.getContractFactory("MyToken")
-    const token = await Token.attach(args.contract)
-
-    return await token.approve(args.to, args.value)
-  });
-
-task("transfer", "transfer amount")
-  .addParam("contract")
-  .addParam("to")
-  .addParam("value")
-  .setAction(async (args, hre) => {
-    const Token = await hre.ethers.getContractFactory("MyToken")
-    const token = await Token.attach(args.contract)
-
-    return await token.transfer(args.to, args.value)
-  });
-
-task("transferFrom", "transfer amount")
-  .addParam("contract")
-  .addParam("from")
-  .addParam("to")
-  .addParam("value")
-  .setAction(async (args, hre) => {
-    const Token = await hre.ethers.getContractFactory("MyToken")
-    const token = await Token.attach(args.contract)
-
-    return await token.transferFrom(args.from, args.to, args.value)
-  });
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html

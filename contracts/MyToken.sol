@@ -1,56 +1,39 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-interface IErc20  {
-    event Transfer(address indexed _from, address indexed _to, uint256 _value);
-    event Approval(address indexed _owner, address indexed _spender, uint256 _value);
-
-    function name() external view returns (string memory);
-    function symbol() external view returns (string memory);
-    function decimals() external view returns (uint8);
-    function totalSupply() external view returns (uint256);
-    function balanceOf(address owner) external view returns (uint256 balance);
-    function transfer(address to, uint256 value) external returns (bool);
-    function transferFrom(address from, address to, uint256 value) external returns (bool);
-    function approve(address spender, uint256 value) external returns (bool);
-    function allowance(address owner, address spender) external view returns (uint256);
-    function mint(address to, uint256 amount) external returns (bool success);
-    function burn(address from, uint256 amount) external returns (bool success);
-}
+import "./IErc20.sol";
 
 contract MyToken is IErc20 {
-    string private NAME;
-    string private SYMBOL;
-    uint8 private DECIMALS;
-    uint256 private TOTALSUPPLY;
+    string private _name;
+    string private _symbol;
+    uint8 private _decimals = 18;
+    uint256 private _totalSupply;
 
-    mapping(address => uint256) private BALANCEOF;
-    mapping(address => mapping(address => uint256)) private APPROVALS;
+    mapping(address => uint256) private _balanceOf;
+    mapping(address => mapping(address => uint256)) private _approvals;
 
-    constructor(string memory _NAME, string memory _SYMBOL) {
-        NAME = _NAME;
-        SYMBOL = _SYMBOL;
-        DECIMALS = 18;
-        TOTALSUPPLY = 0;
+    constructor(string memory nameVal, string memory symbolVal) {
+        _name = nameVal;
+        _symbol = symbolVal;
     }
 
     function transfer(address to, uint256 value) external override returns (bool success) {
-        unchecked {
-            BALANCEOF[to] += value;
-            BALANCEOF[msg.sender] -= value;            
-        }
+        require(_balanceOf[msg.sender] >= value, "Your balance is not enough");
+        _balanceOf[to] += value;
+        _balanceOf[msg.sender] -= value;            
 
         emit Transfer(msg.sender, to, value);
         return true;
     }
 
     function transferFrom(address from, address to, uint256 value) external override returns (bool success) {
-        unchecked {
-            APPROVALS[from][msg.sender] -= value;
+        require(_balanceOf[from] >= value, "Your balance is not enough");
+        require(_approvals[from][msg.sender] >= value, "Not approved");
 
-            BALANCEOF[to] += value;
-            BALANCEOF[from] -= value;
-        }
+        _approvals[from][msg.sender] -= value;
+
+        _balanceOf[to] += value;
+        _balanceOf[from] -= value;
 
         emit Transfer(from, to, value);
 
@@ -58,7 +41,7 @@ contract MyToken is IErc20 {
     }
 
     function approve(address spender, uint256 value) external override returns (bool success) {
-        APPROVALS[msg.sender][spender] = value;
+        _approvals[msg.sender][spender] = value;
         
         emit Approval(msg.sender, spender, value);
 
@@ -66,42 +49,38 @@ contract MyToken is IErc20 {
     }
 
     function allowance(address owner, address spender) external override view returns (uint256 remaining) {
-        return APPROVALS[owner][spender];
+        return _approvals[owner][spender];
     }
 
     function name() external override view returns (string memory) {
-        return NAME;
+        return _name;
     }
 
     function symbol() external override view returns (string memory) {
-        return SYMBOL;
+        return _symbol;
     }
 
     function decimals() external override view returns (uint8){
-        return DECIMALS;
+        return _decimals;
     }
 
     function totalSupply() external override view returns (uint256) {
-        return TOTALSUPPLY;
+        return _totalSupply;
     }
 
     function balanceOf(address owner) external override view returns (uint256 balance) {
-        return BALANCEOF[owner];
+        return _balanceOf[owner];
     }
 
      function mint(address to, uint256 amount) external override returns (bool success) {
-         unchecked {
-            TOTALSUPPLY += amount;
-            BALANCEOF[to] += amount;
-         }
+        _totalSupply += amount;
+        _balanceOf[to] += amount;
         return true;
     }
 
     function burn(address from, uint256 amount) external override returns (bool success) {
-        unchecked {
-            TOTALSUPPLY -= amount;
-            BALANCEOF[from] -= amount;
-        }
+        _totalSupply -= amount;
+        _balanceOf[from] -= amount;
         return true;
     }
 }
